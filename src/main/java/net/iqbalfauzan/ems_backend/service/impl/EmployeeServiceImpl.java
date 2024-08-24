@@ -10,6 +10,7 @@ import net.iqbalfauzan.ems_backend.service.EmployeeService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -24,8 +25,16 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
-    public EmployeeDto updateEmployee(EmployeeDto employeeDto) {
-        return null;
+    public EmployeeDto updateEmployee(Long employeeId, EmployeeDto employeeDto) {
+        Employee employee = employeeRepository.findById(employeeId).orElseThrow(
+                () -> new EntityNotFoundException("Employee with id "+employeeId+" not found")
+        );
+        employee.setFirstName(employeeDto.getFirstName());
+        employee.setLastName(employeeDto.getLastName());
+        employee.setEmail(employeeDto.getEmail());
+
+        Employee employeeUpdated = employeeRepository.save(employee);
+        return EmployeeMapper.mapToEmployeeDto(employeeUpdated);
     }
 
     @Override
@@ -37,11 +46,16 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeDto> findAllEmployees() {
-        return List.of();
+        List<Employee> employees = employeeRepository.findAll();
+        return employees.stream().map(employee -> EmployeeMapper.mapToEmployeeDto(employee))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public EmployeeDto deleteEmployee(Long id) {
-        return null;
+    public void deleteEmployee(Long id) {
+        employeeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Employee with id " + id + " not found"));
+
+        employeeRepository.deleteById(id);
     }
 }
